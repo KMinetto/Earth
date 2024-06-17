@@ -5,6 +5,8 @@ import {
 import GUI from 'lil-gui';
 import earthVertexShader from './shaders/earth/vertex.glsl';
 import earthFragmentShader from './shaders/earth/fragment.glsl';
+import atmosphereVShader from './shaders/atmosphere/vertex.glsl';
+import atmosphereFShader from './shaders/atmosphere/fragment.glsl';
 
 /**
  * Base
@@ -71,10 +73,31 @@ const earthMaterial = new THREE.ShaderMaterial({
         uSunDirection: new THREE.Uniform(new THREE.Vector3(0, 0, 1)),
         uAtmosphereDay: new THREE.Uniform(new THREE.Color(earthParameters.atmosphereDayColor)),
         uAtmosphereTwilight: new THREE.Uniform(new THREE.Color(earthParameters.atmosphereTwilightColor)),
+        uSpecularIntensity: new THREE.Uniform(32)
     }
 });
 const earth = new THREE.Mesh(earthGeometry, earthMaterial);
 scene.add(earth);
+
+/**
+ * Atmosphere
+ */
+const atmosphereMaterial = new THREE.ShaderMaterial({
+    vertexShader: atmosphereVShader,
+    fragmentShader: atmosphereFShader,
+    uniforms:
+    {
+        uSunDirection: new THREE.Uniform(new THREE.Vector3(0, 0, 1)),
+        uAtmosphereDay: new THREE.Uniform(new THREE.Color(earthParameters.atmosphereDayColor)),
+        uAtmosphereTwilight: new THREE.Uniform(new THREE.Color(earthParameters.atmosphereTwilightColor)),
+    },
+    side: THREE.BackSide,
+    transparent: true
+});
+
+const atmosphere = new THREE.Mesh(earthGeometry, atmosphereMaterial);
+atmosphere.scale.set(1.015, 1.015, 1.015);
+scene.add(atmosphere);
 
 /**
  * Sun
@@ -100,6 +123,7 @@ const updateSun = () => {
 
     // Uniforms
     earthMaterial.uniforms.uSunDirection.value.copy(sunDirection);
+    atmosphereMaterial.uniforms.uSunDirection.value.copy(sunDirection);
 }
 
 updateSun();
@@ -119,6 +143,13 @@ sunGUI.add(sunSpherical, 'theta')
     .name("Sun THETA")
 ;
 
+sunGUI.add(earthMaterial.uniforms.uSpecularIntensity, 'value')
+    .min(0)
+    .max(50)
+    .step(0.01)
+    .name("Specular Intensity")
+;
+
 const cloudsGUI = gui.addFolder('Clouds');
 
 cloudsGUI.add(earthMaterial.uniforms.uCloudsIntensity, 'value')
@@ -132,11 +163,13 @@ const atmosphereGUI = gui.addFolder('Atmosphere');
 atmosphereGUI.addColor(earthParameters, 'atmosphereDayColor')
     .onChange(() => {
         earthMaterial.uniforms.uAtmosphereDay.value.set(earthParameters.atmosphereDayColor)
+        atmosphereMaterial.uniforms.uAtmosphereDay.value.set(earthParameters.atmosphereDayColor)
     })
 ;
 atmosphereGUI.addColor(earthParameters, 'atmosphereTwilightColor')
     .onChange(() => {
         earthMaterial.uniforms.uAtmosphereTwilight.value.set(earthParameters.atmosphereTwilightColor);
+        atmosphereMaterial.uniforms.uAtmosphereTwilight.value.set(earthParameters.atmosphereTwilightColor);
     })
 ;
 
