@@ -37,6 +37,16 @@ scene.add(camera);
 
 // Loaders
 const textureLoader = new THREE.TextureLoader();
+const earthDayTexture = textureLoader.load('./earth/day.jpg');
+const earthNightTexture = textureLoader.load('./earth/night.jpg');
+const earthCloudsTexture = textureLoader.load('./earth/specularClouds.jpg');
+
+earthDayTexture.colorSpace = THREE.SRGBColorSpace;
+earthNightTexture.colorSpace = THREE.SRGBColorSpace;
+
+earthDayTexture.anisotropy = 8;
+earthNightTexture.anisotropy = 8;
+earthCloudsTexture.anisotropy = 8;
 
 /**
  * Earth
@@ -48,10 +58,57 @@ const earthMaterial = new THREE.ShaderMaterial({
     fragmentShader: earthFragmentShader,
     uniforms:
     {
+        uDayTexture: new THREE.Uniform(earthDayTexture),
+        uNightTexture: new THREE.Uniform(earthNightTexture),
+        uCloudsTexture: new THREE.Uniform(earthCloudsTexture),
+        uSunDirection: new THREE.Uniform(new THREE.Vector3(0, 0, 1))
     }
 });
 const earth = new THREE.Mesh(earthGeometry, earthMaterial);
 scene.add(earth);
+
+/**
+ * Sun
+ */
+const sunSpherical = new THREE.Spherical(1, Math.PI * 0.5, 0.5);
+const sunDirection = new THREE.Vector3();
+
+const debugSun = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(0.1, 2),
+    new THREE.MeshBasicMaterial()
+);
+scene.add(debugSun);
+
+const updateSun = () => {
+    // Sun Direction
+    sunDirection.setFromSpherical(sunSpherical);
+
+    // Debug Sun
+    debugSun.position
+        .copy(sunDirection)
+        .multiplyScalar(5)
+    ;
+
+    // Uniforms
+    earthMaterial.uniforms.uSunDirection.value.copy(sunDirection);
+}
+
+updateSun();
+
+const sunGUI = gui.addFolder('Sun');
+
+sunGUI.add(sunSpherical, 'phi')
+    .min(0)
+    .max(Math.PI)
+    .onChange(updateSun)
+    .name("Sun PHI")
+;
+sunGUI.add(sunSpherical, 'theta')
+    .min(-Math.PI)
+    .max(Math.PI)
+    .onChange(updateSun)
+    .name("Sun THETA")
+;
 
 window.addEventListener('resize', () =>
 {
@@ -83,6 +140,8 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(sizes.pixelRatio);
 renderer.setClearColor('#000011');
+
+console.log(renderer.capabilities.getMaxAnisotropy());
 
 /**
  * Animate
