@@ -51,6 +51,12 @@ earthCloudsTexture.anisotropy = 8;
 /**
  * Earth
  */
+// Parameters
+const earthParameters = {
+    atmosphereDayColor: '#00AAFF',
+    atmosphereTwilightColor: '#FF6600',
+};
+
 // Mesh
 const earthGeometry = new THREE.SphereGeometry(2, 64, 64);
 const earthMaterial = new THREE.ShaderMaterial({
@@ -62,7 +68,9 @@ const earthMaterial = new THREE.ShaderMaterial({
         uNightTexture: new THREE.Uniform(earthNightTexture),
         uCloudsTexture: new THREE.Uniform(earthCloudsTexture),
         uCloudsIntensity: new THREE.Uniform(0.2),
-        uSunDirection: new THREE.Uniform(new THREE.Vector3(0, 0, 1))
+        uSunDirection: new THREE.Uniform(new THREE.Vector3(0, 0, 1)),
+        uAtmosphereDay: new THREE.Uniform(new THREE.Color(earthParameters.atmosphereDayColor)),
+        uAtmosphereTwilight: new THREE.Uniform(new THREE.Color(earthParameters.atmosphereTwilightColor)),
     }
 });
 const earth = new THREE.Mesh(earthGeometry, earthMaterial);
@@ -118,6 +126,18 @@ cloudsGUI.add(earthMaterial.uniforms.uCloudsIntensity, 'value')
     .max(1)
     .step(0.001)
     .name("Clouds Intensity")
+;
+
+const atmosphereGUI = gui.addFolder('Atmosphere');
+atmosphereGUI.addColor(earthParameters, 'atmosphereDayColor')
+    .onChange(() => {
+        earthMaterial.uniforms.uAtmosphereDay.value.set(earthParameters.atmosphereDayColor)
+    })
+;
+atmosphereGUI.addColor(earthParameters, 'atmosphereTwilightColor')
+    .onChange(() => {
+        earthMaterial.uniforms.uAtmosphereTwilight.value.set(earthParameters.atmosphereTwilightColor);
+    })
 ;
 
 window.addEventListener('resize', () =>
