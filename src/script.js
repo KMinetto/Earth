@@ -61,6 +61,7 @@ const earthMaterial = new THREE.ShaderMaterial({
         uDayTexture: new THREE.Uniform(earthDayTexture),
         uNightTexture: new THREE.Uniform(earthNightTexture),
         uCloudsTexture: new THREE.Uniform(earthCloudsTexture),
+        uCloudsIntensity: new THREE.Uniform(0.2),
         uSunDirection: new THREE.Uniform(new THREE.Vector3(0, 0, 1))
     }
 });
@@ -108,6 +109,15 @@ sunGUI.add(sunSpherical, 'theta')
     .max(Math.PI)
     .onChange(updateSun)
     .name("Sun THETA")
+;
+
+const cloudsGUI = gui.addFolder('Clouds');
+
+cloudsGUI.add(earthMaterial.uniforms.uCloudsIntensity, 'value')
+    .min(0)
+    .max(1)
+    .step(0.001)
+    .name("Clouds Intensity")
 ;
 
 window.addEventListener('resize', () =>
